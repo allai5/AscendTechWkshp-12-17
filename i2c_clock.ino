@@ -1,51 +1,60 @@
-
+#include <DS1302.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
- 
-LiquidCrystal_I2C lcd(0x3F,16,2);  // run ic2_scanner sketch and get the IC2 address, which is 0x3f in my case,it could be 0x3f in many cases
- 
-void setup()
-{
+LiquidCrystal_I2C lcd(0x3f,16,2); 
+
+const int kCePin   = 5;  // Chip Enable
+const int kIoPin   = 6;  // Input/Output
+const int kSclkPin = 7;  // Serial Clock
+
+
+DS1302 rtc(kCePin, kIoPin, kSclkPin);
+
+void setup() {
   Serial.begin(9600);
   lcd.init();                      // initialize the lcd
   lcd.backlight();
   lcd.setCursor(0,0);
 
-String ttime = "3PM";
+  // Initialize a new chip by turning off write protection and clearing the
+  // clock halt flag. These methods needn't always be called. See the DS1302
+  // datasheet for details.
+  rtc.writeProtect(false);
+  rtc.halt(false);
 
-    
-  
-  if (ttime.length() > 16) {
-    for (int i = 0; i < 16; i++) {
-      lcd.print(ttime.charAt(i));
-    }
-    lcd.setCursor(0,1);
-    
-    for (int i = 16; i < ttime.length(); i++) {
-      lcd.print(ttime.charAt(i));
-    
-      
-  }
-  }
+  // Make a new time object to set the date and time.
+  // Sunday, September 22, 2013 at 01:38:50.
+  Time t(2016, 12, 17, 3, 38, 50, Time::kSaturday);
 
-  else {
-      for (int i = 0; i < ttime.length(); i++) {
-        lcd.print(ttime.charAt(i));
-      } 
-
-      lcd.setCursor(ttime.length(),0);
-    
-    }
-
-    free(&ttime);
-
-}
+  // Set the time and date on the chip.
+  rtc.time(t);
 
  
-void loop()
-{
-    
-      
-      
 
+  
+}
+
+// Loop and print the time every second.
+void loop() {
+//  Serial.println(rtc.time().formatDateTime());  //Print out the time
+//  delay(1000);
+
+ String input = rtc.time().formatDateTime();
+  char input2;
+
+  for (int i = 0; i < 16; i++) {
+    input2 = input.charAt(i);
+    lcd.print(input2);
+  }
+  
+  lcd.setCursor(0,1);
+
+  for (int j = 16; j < input.length(); j++) {
+    input2 = input.charAt(j);
+    lcd.print(input2);
+  }
+
+  delay(10000);
+  
+  
 }
